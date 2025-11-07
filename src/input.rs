@@ -74,11 +74,11 @@ pub fn default_camera_inputs(
     mut controller: EventWriter<EditorCamInputEvent>,
     mut mouse_wheel: EventReader<MouseWheel>,
     mouse_input: Res<ButtonInput<MouseButton>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     cameras: Query<(Entity, &Camera, &EditorCam)>,
     primary_window: Query<Entity, With<PrimaryWindow>>,
 ) {
     let orbit_start = MouseButton::Right;
-    let pan_start = MouseButton::Left;
     let zoom_stop = 0.0;
 
     if let Some(&camera) = pointer_map.get(&PointerId::Mouse) {
@@ -96,7 +96,7 @@ pub fn default_camera_inputs(
             .unwrap_or(0.0);
         let should_zoom_end = is_in_zoom_mode && zoom_amount_abs <= zoom_stop;
 
-        if mouse_input.any_just_released([orbit_start, pan_start]) || should_zoom_end {
+        if mouse_input.just_released(orbit_start) || should_zoom_end {
             controller.write(EditorCamInputEvent::End { camera });
         }
     }
@@ -113,15 +113,17 @@ pub fn default_camera_inputs(
                     continue; // Pointer must be in viewport to start a motion.
                 };
 
-                if mouse_input.just_pressed(orbit_start) {
+                let shift_pressed = keyboard_input.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+
+                if mouse_input.just_pressed(orbit_start) && shift_pressed {
                     controller.write(EditorCamInputEvent::Start {
-                        kind: MotionKind::OrbitZoom,
+                        kind: MotionKind::PanZoom,
                         camera,
                         pointer,
                     });
-                } else if mouse_input.just_pressed(pan_start) {
+                } else if mouse_input.just_pressed(orbit_start) {
                     controller.write(EditorCamInputEvent::Start {
-                        kind: MotionKind::PanZoom,
+                        kind: MotionKind::OrbitZoom,
                         camera,
                         pointer,
                     });
