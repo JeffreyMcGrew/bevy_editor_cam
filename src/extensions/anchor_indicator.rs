@@ -5,12 +5,12 @@
 use crate::prelude::*;
 
 use bevy_app::prelude::*;
+use bevy_camera::prelude::*;
 use bevy_color::Color;
 use bevy_ecs::prelude::*;
 use bevy_gizmos::prelude::*;
 use bevy_math::prelude::*;
 use bevy_reflect::prelude::*;
-use bevy_render::prelude::*;
 use bevy_transform::prelude::*;
 
 /// See the [module](self) docs.
@@ -21,8 +21,8 @@ impl Plugin for AnchorIndicatorPlugin {
         app.add_systems(
             PostUpdate,
             draw_anchor
-                .after(bevy_transform::TransformSystem::TransformPropagate)
-                .after(bevy_render::camera::CameraUpdateSystem),
+                .after(bevy_transform::TransformSystems::Propagate)
+                .after(bevy_camera::CameraUpdateSystems),
         )
         .register_type::<AnchorIndicator>();
     }
@@ -87,22 +87,22 @@ pub fn draw_anchor(
             let offset = 1.5 * scale;
             gizmos.ray(
                 anchor_world + offset * cam_transform.left(),
-                offset * arm_length * cam_transform.left(),
+                cam_transform.left() * (offset * arm_length),
                 gizmo_color(),
             );
             gizmos.ray(
                 anchor_world + offset * cam_transform.right(),
-                offset * arm_length * cam_transform.right(),
+                cam_transform.right() * (offset * arm_length),
                 gizmo_color(),
             );
             gizmos.ray(
                 anchor_world + offset * cam_transform.up(),
-                offset * arm_length * cam_transform.up(),
+                cam_transform.up() * (offset * arm_length),
                 gizmo_color(),
             );
             gizmos.ray(
                 anchor_world + offset * cam_transform.down(),
-                offset * arm_length * cam_transform.down(),
+                cam_transform.down() * (offset * arm_length),
                 gizmo_color(),
             );
         }
